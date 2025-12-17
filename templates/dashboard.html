@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Task Manager{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <div class="dashboard-header">
+        <h1>Dashboard</h1>
+        <a href="{{ url_for('tasks') }}" class="btn btn-primary">View All Tasks</a>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">📝</div>
+            <div class="stat-info">
+                <h3>{{ stats.total }}</h3>
+                <p>Total Tasks</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">✅</div>
+            <div class="stat-info">
+                <h3>{{ stats.completed }}</h3>
+                <p>Completed</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">⏳</div>
+            <div class="stat-info">
+                <h3>{{ stats.pending }}</h3>
+                <p>Pending</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">🔄</div>
+            <div class="stat-info">
+                <h3>{{ stats.in_progress }}</h3>
+                <p>In Progress</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-content">
+        <!-- Recent Tasks -->
+        <div class="dashboard-section">
+            <h2>Recent Tasks</h2>
+            {% if recent_tasks %}
+                <div class="task-list">
+                    {% for task in recent_tasks %}
+                        <div class="task-item">
+                            <div class="task-header">
+                                <h3>{{ task.title }}</h3>
+                                <span class="badge badge-{{ task.priority }}">{{ task.priority }}</span>
+                            </div>
+                            {% if task.description %}
+                                <p class="task-description">{{ task.description[:100] }}{% if task.description|length > 100 %}...{% endif %}</p>
+                            {% endif %}
+                            <div class="task-meta">
+                                <span class="badge badge-{{ task.status }}">{{ task.status }}</span>
+                                {% if task.category %}
+                                    <span class="task-category">📁 {{ task.category }}</span>
+                                {% endif %}
+                                <span class="task-date">{{ task.created_at.strftime('%b %d, %Y') }}</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="empty-state">No tasks yet. Create your first task!</p>
+            {% endif %}
+        </div>
+
+        <!-- Upcoming Tasks -->
+        <div class="dashboard-section">
+            <h2>Upcoming Deadlines</h2>
+            {% if upcoming_tasks %}
+                <div class="task-list">
+                    {% for task in upcoming_tasks %}
+                        <div class="task-item">
+                            <div class="task-header">
+                                <h3>{{ task.title }}</h3>
+                                <span class="badge badge-{{ task.priority }}">{{ task.priority }}</span>
+                            </div>
+                            <div class="task-meta">
+                                <span class="badge badge-{{ task.status }}">{{ task.status }}</span>
+                                <span class="task-date">📅 Due: {{ task.due_date.strftime('%b %d, %Y') }}</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="empty-state">No upcoming deadlines</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
