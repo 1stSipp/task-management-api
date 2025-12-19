@@ -36,6 +36,8 @@ class Task(db.Model):
     category = db.Column(db.String(50))
     priority = db.Column(db.String(20), default='medium')  # low, medium, high
     status = db.Column(db.String(20), default='pending')   # pending, in_progress, completed
+    archived = db.Column(db.Boolean, default=False)  # NEW: archived status
+    notes = db.Column(db.Text)  # NEW: task notes
     due_date = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -56,6 +58,8 @@ class Task(db.Model):
             'category': self.category,
             'priority': self.priority,
             'status': self.status,
+            'archived': self.archived,
+            'notes': self.notes,
             'due_date': self.due_date.isoformat() if self.due_date else None,
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat(),

@@ -152,9 +152,16 @@ def tasks():
     status_filter = request.args.get('status')
     category_filter = request.args.get('category')
     priority_filter = request.args.get('priority')
+    show_archived = request.args.get('archived') == 'true'
     
     # Build query
     query = Task.query.filter_by(user_id=current_user.id)
+    
+    # Filter by archived status
+    if show_archived:
+        query = query.filter_by(archived=True)
+    else:
+        query = query.filter_by(archived=False)
     
     if status_filter:
         query = query.filter_by(status=status_filter)
@@ -170,17 +177,35 @@ def tasks():
         .distinct().all()
     categories = [c[0] for c in categories if c[0]]
     
+    # Count archived tasks
+    archived_count = Task.query.filter_by(user_id=current_user.id, archived=True).count()
+    
     return render_template('tasks.html', 
                          tasks=tasks, 
                          categories=categories,
                          current_status=status_filter,
                          current_category=category_filter,
-                         current_priority=priority_filter)
+                         current_priority=priority_filter,
+                         show_archived=show_archived,
+                         archived_count=archived_count)
 
 
 # ============================================================================
 # TASK API ENDPOINTS (CRUD Operations)
 # ============================================================================
+
+@app.route('/api/tasks/<int:task_id>', methods=['GET'])
+@login_required
+def get_task(task_id):
+    """Get a single task"""
+    task = Task.query.get_or_404(task_id)
+    
+    # Check if task belongs to current user
+    if task.user_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    return jsonify({'success': True, 'task': task.to_dict()})
+
 
 @app.route('/api/tasks', methods=['POST'])
 @login_required
@@ -194,6 +219,7 @@ def create_task():
         category=data.get('category'),
         priority=data.get('priority', 'medium'),
         status=data.get('status', 'pending'),
+        notes=data.get('notes'),
         user_id=current_user.id
     )
     
@@ -227,6 +253,7 @@ def update_task(task_id):
     task.category = data.get('category', task.category)
     task.priority = data.get('priority', task.priority)
     task.status = data.get('status', task.status)
+    task.notes = data.get('notes', task.notes)
     
     # Update due date if provided
     if 'due_date' in data:
@@ -243,6 +270,24 @@ def update_task(task_id):
         task.completed_at = datetime.utcnow()
     elif task.status != 'completed':
         task.completed_at = None
+    
+    db.session.commit()
+    
+    return jsonify({'success': True, 'task': task.to_dict()})
+
+
+@app.route('/api/tasks/<int:task_id>/archive', methods=['PUT'])
+@login_required
+def archive_task(task_id):
+    """Archive or unarchive a task"""
+    task = Task.query.get_or_404(task_id)
+    
+    # Check if task belongs to current user
+    if task.user_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    data = request.get_json()
+    task.archived = data.get('archived', not task.archived)
     
     db.session.commit()
     
