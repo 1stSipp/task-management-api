@@ -9,8 +9,7 @@ app.config.from_object(Config)
 
 # Initialize extensions
 db.init_app(app)
-with app.app_context():
-    db.create_all()
+
 
 # Initialize Flask-Login
 login_manager = LoginManager()
