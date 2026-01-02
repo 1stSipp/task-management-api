@@ -327,7 +327,15 @@ def internal_error(error):
     db.session.rollback()
     return render_template('500.html'), 500
 
-
+@app.route('/init-db-12345')
+def init_database():
+    """Initialize database - visit once then remove"""
+    try:
+        with app.app_context():
+            db.create_all()
+        return "✅ Database initialized! Register now, then remove this route."
+    except Exception as e:
+        return f"❌ Error: {str(e)}"
 # ============================================================================
 # RUN APP
 # ============================================================================
